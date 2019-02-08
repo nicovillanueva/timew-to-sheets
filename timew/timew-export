@@ -1,0 +1,56 @@
+color: on
+confirmation: on
+debug: off
+reports.day.axis: internal
+reports.day.cell: 15
+reports.day.day: yes
+reports.day.holidays: no
+reports.day.hours: all
+reports.day.lines: 2
+reports.day.month: no
+reports.day.spacing: 1
+reports.day.summary: yes
+reports.day.totals: no
+reports.day.week: no
+reports.day.weekday: yes
+reports.gaps.range: :day
+reports.month.cell: 15
+reports.month.day: yes
+reports.month.holidays: yes
+reports.month.hours: all
+reports.month.lines: 1
+reports.month.month: yes
+reports.month.spacing: 1
+reports.month.summary: yes
+reports.month.totals: yes
+reports.month.week: yes
+reports.month.weekday: yes
+reports.summary.holidays: yes
+reports.week.cell: 15
+reports.week.day: yes
+reports.week.holidays: yes
+reports.week.hours: all
+reports.week.lines: 1
+reports.week.month: no
+reports.week.spacing: 1
+reports.week.summary: yes
+reports.week.totals: yes
+reports.week.week: yes
+reports.week.weekday: yes
+temp.db: /Users/user/.timewarrior
+temp.report.end: 20190131T140104Z
+temp.report.start: 20181212T133000Z
+temp.report.tags:
+temp.version: 1.1.1
+theme.colors.exclusion: gray8 on gray4
+theme.colors.holiday: gray4
+theme.colors.label: gray4
+theme.colors.today: white
+theme.description: Built-in default
+verbose: on
+
+[
+{"start":"20181212T133000Z","end":"20181212T144500Z","tags":["work"]},
+{"start":"20181213T133000Z","end":"20181214T133010Z","tags":["work", "more work"]},
+{"start":"20181215T133000Z","end":"20181217T133000Z","tags":["getting high"]}
+]
