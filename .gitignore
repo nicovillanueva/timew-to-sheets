@@ -2,3 +2,5 @@ token.json
 credentials.json
 .DS_Store
 timew-to-sheets
+scratch/
+.idea/

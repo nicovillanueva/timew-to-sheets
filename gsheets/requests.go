@@ -1,14 +1,31 @@
 package gsheets
 
 import (
+	"github.com/nicovillanueva/timew-to-sheets/hashing"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/sheets/v4"
-	"strconv"
 )
 
-// GetFormattingRequests returns an array of requests to apply the sheet's format
-func GetFormattingRequests() []*sheets.Request {
+// RequestPool groups requests
+type RequestPool []*sheets.Request
+
+// AddMany takes many requests to add to the pool
+func (rp *RequestPool) AddMany(reqs []*sheets.Request) {
+	log.Debugf("adding %d requests to pool", len(reqs))
+	*rp = append(*rp, reqs...)
+}
+
+// AddOne takes a single request to add to the pool
+func (rp *RequestPool) AddOne(r *sheets.Request) {
+	log.Debugf("Adding request to pool: %+v", r)
+	*rp = append(*rp, r)
+}
+
+// getFormattingRequests returns an array of requests to apply styling to a sheet
+func getFormattingRequests(sheetID int64) []*sheets.Request {
 	return []*sheets.Request{
-		&sheets.Request{
+		{
+			// Forced locale - TODO: Remove?
 			UpdateSpreadsheetProperties: &sheets.UpdateSpreadsheetPropertiesRequest{
 				Properties: &sheets.SpreadsheetProperties{
 					Locale: "es_AR",
@@ -16,9 +33,11 @@ func GetFormattingRequests() []*sheets.Request {
 				Fields: "locale",
 			},
 		},
-		&sheets.Request{
+		{
+			// Frozen count in all sheets (new and old)
 			UpdateSheetProperties: &sheets.UpdateSheetPropertiesRequest{
 				Properties: &sheets.SheetProperties{
+					SheetId: sheetID,
 					GridProperties: &sheets.GridProperties{
 						FrozenRowCount: 1,
 					},
@@ -26,9 +45,11 @@ func GetFormattingRequests() []*sheets.Request {
 				Fields: "gridProperties.frozenRowCount",
 			},
 		},
-		&sheets.Request{
+		{
+			// Header bold
 			RepeatCell: &sheets.RepeatCellRequest{
 				Range: &sheets.GridRange{
+					SheetId:        sheetID,
 					EndRowIndex:    1,
 					EndColumnIndex: 4,
 				},
@@ -42,9 +63,11 @@ func GetFormattingRequests() []*sheets.Request {
 				},
 			},
 		},
-		&sheets.Request{
+		{
+			// Totals bold
 			RepeatCell: &sheets.RepeatCellRequest{
 				Range: &sheets.GridRange{
+					SheetId:          sheetID,
 					StartRowIndex:    1,
 					EndRowIndex:      2,
 					StartColumnIndex: 5,
@@ -60,9 +83,11 @@ func GetFormattingRequests() []*sheets.Request {
 				},
 			},
 		},
-		&sheets.Request{
+		{
+			// Entries date format
 			RepeatCell: &sheets.RepeatCellRequest{
 				Range: &sheets.GridRange{
+					SheetId:          sheetID,
 					StartColumnIndex: 0,
 					EndColumnIndex:   2,
 					EndRowIndex:      10,
@@ -78,9 +103,11 @@ func GetFormattingRequests() []*sheets.Request {
 				Fields: "userEnteredFormat.numberFormat",
 			},
 		},
-		&sheets.Request{
+		{
+			// Delta durations format
 			RepeatCell: &sheets.RepeatCellRequest{
 				Range: &sheets.GridRange{
+					SheetId:          sheetID,
 					StartRowIndex:    1,
 					StartColumnIndex: 2,
 					EndColumnIndex:   3,
@@ -96,94 +123,43 @@ func GetFormattingRequests() []*sheets.Request {
 				Fields: "userEnteredFormat.numberFormat",
 			},
 		},
-
-		&sheets.Request{
+		{
+			// Resize entries columns - not working though?
 			AutoResizeDimensions: &sheets.AutoResizeDimensionsRequest{
 				Dimensions: &sheets.DimensionRange{
+					SheetId:    sheetID,
 					Dimension:  "COLUMNS",
 					StartIndex: 0,
-					EndIndex:   1,
+					EndIndex:   4,
 				},
 			},
 		},
 	}
 }
 
-// GetTotalsRequests returns an array of requests that make up the Total counter
-func GetTotalsRequests() []*sheets.Request {
-	return []*sheets.Request{
-		&sheets.Request{
-			UpdateCells: &sheets.UpdateCellsRequest{
-				Fields: "userEnteredValue",
-				Range: &sheets.GridRange{
-					StartColumnIndex: 5,
-					StartRowIndex:    1,
-				},
-				Rows: []*sheets.RowData{
-					&sheets.RowData{
-						Values: []*sheets.CellData{
-							&sheets.CellData{
-								UserEnteredValue: &sheets.ExtendedValue{
-									StringValue: "Total",
-								},
-							},
-							&sheets.CellData{
-								UserEnteredValue: &sheets.ExtendedValue{
-									FormulaValue: "=SUM(C2:C1000)",
-								},
-							},
-						},
-					},
+// getTotalsRequest returns a request that display the totals in a sheet; styling is applied by `getFormattingRequests()`
+func getTotalsRequest(sheetID int64) *sheets.Request {
+	b := NewUpdateRequestBuilder(sheetID, 5, 1)
+	b.AddRow("Total", "#F#=SUM(C2:C1000)")
+	return b.Request()
+}
+
+// NewStyledSheetRequests returns a slice of requests that create and style a new sheet
+func NewStyledSheetRequests(name string) []*sheets.Request {
+	hashedName := hashing.HashDate(name)
+	requests := make([]*sheets.Request, 1)
+	requests[0] = &sheets.Request{
+		AddSheet: &sheets.AddSheetRequest{
+			Properties: &sheets.SheetProperties{
+				Title:   name,
+				SheetId: hashedName,
+				GridProperties: &sheets.GridProperties{
+					FrozenRowCount: 1,
 				},
 			},
 		},
 	}
-}
-
-func getExtValue(data string) *sheets.ExtendedValue {
-	prefix := data[:3]
-	switch prefix {
-	case "#F#":
-		return &sheets.ExtendedValue{
-			FormulaValue: data[3:],
-		}
-	case "#B#":
-		b, err := strconv.ParseBool(data[3:])
-		if err != nil {
-			b = false
-		}
-		return &sheets.ExtendedValue{
-			BoolValue: b,
-		}
-	case "#S#":
-		return &sheets.ExtendedValue{
-			StringValue: data[3:],
-		}
-	case "#N#":
-		n, err := strconv.Atoi(data[3:])
-		if err != nil {
-			n = 0
-		}
-		return &sheets.ExtendedValue{
-			NumberValue: float64(n),
-		}
-	default:
-		return &sheets.ExtendedValue{
-			StringValue: data,
-		}
-	}
-}
-
-func PrepareRowData(cellData ...string) *sheets.RowData {
-	return &sheets.RowData{
-		Values: func() []*sheets.CellData {
-			cd := make([]*sheets.CellData, len(cellData))
-			for i, d := range cellData {
-				cd[i] = &sheets.CellData{
-					UserEnteredValue: getExtValue(d),
-				}
-			}
-			return cd
-		}(),
-	}
+	requests = append(requests, getFormattingRequests(hashedName)...)
+	requests = append(requests, getTotalsRequest(hashedName))
+	return requests
 }

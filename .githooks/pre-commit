@@ -1,0 +1,10 @@
+#!/bin/bash
+
+FILENAME='gsheets/credentials.go'
+
+if [[ ! $(grep 'var credentialsRaw = ``' "$FILENAME") ]]; then
+    echo "credentials potentially present in $FILENAME; aborting commit."
+    exit 1
+fi
+
+

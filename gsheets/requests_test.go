@@ -5,6 +5,12 @@ import (
 	"testing"
 )
 
+// func Test_RequestPool(t *testing.T) {
+// 	rp := RequestPool{}
+// 	rp.AddMany(GetFormattingRequests(0))
+// 	fmt.Printf("Now: %+v\n", rp)
+// }
+
 func Test_getExtValue(t *testing.T) {
 	td := []struct {
 		input  string

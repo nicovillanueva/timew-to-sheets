@@ -52,5 +52,11 @@ verbose: on
 [
 {"start":"20181212T133000Z","end":"20181212T144500Z","tags":["work"]},
 {"start":"20181213T133000Z","end":"20181214T133010Z","tags":["work", "more work"]},
-{"start":"20181215T133000Z","end":"20181217T133000Z","tags":["getting high"]}
+{"start":"20181215T133000Z","end":"20181217T133000Z","tags":["getting high"]},
+{"start":"20190112T133000Z","end":"20190112T144500Z","tags":["work jan"]},
+{"start":"20190113T133000Z","end":"20190114T133010Z","tags":["work", "more work"]},
+{"start":"20190115T133000Z","end":"20190117T133000Z","tags":["still getting high"]},
+{"start":"20190212T133000Z","end":"20190212T144500Z","tags":["work feb"]},
+{"start":"20190213T133000Z","end":"20190214T133010Z","tags":["work", "more work"]},
+{"start":"20190215T133000Z","end":"20190217T133000Z","tags":["getting high? yes"]}
 ]
